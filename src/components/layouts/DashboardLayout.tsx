@@ -2,6 +2,8 @@ import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROLE_LABELS } from "@/types/auth";
 import { Bell, Search, Settings, LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -9,12 +11,10 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  // TODO: Replace with actual user data from context
-  const user = {
-    name: "John Doe",
-    email: "john@jeuxboard.com",
-    role: "DEVELOPER",
-    avatar: null,
+  const { profile, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -57,16 +57,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* User Menu */}
             <div className="flex items-center space-x-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-foreground">{user.name}</p>
-                <p className="text-xs text-muted-foreground">{user.role}</p>
+                <p className="text-sm font-medium text-foreground">{profile?.name}</p>
+                <p className="text-xs text-muted-foreground">{profile?.role ? ROLE_LABELS[profile.role] : ''}</p>
               </div>
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar || undefined} />
+                <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {profile?.name.split(' ').map(n => n[0]).join('') || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>

@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthLayout } from "@/components/layouts/AuthLayout";
 import { RoleSelector } from "@/components/auth/RoleSelector";
+import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/types/auth";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -17,29 +19,55 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp, user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      // TODO: Show error toast
-      console.error("Passwords don't match");
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords don't match. Please try again.",
+        variant: "destructive",
+      });
       return;
     }
     
     if (!role) {
-      // TODO: Show error toast
-      console.error("Please select a role");
+      toast({
+        title: "Role Required",
+        description: "Please select your role to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
       return;
     }
     
     setIsLoading(true);
     
-    // TODO: Implement Supabase authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log("Signup:", { name, email, password, role });
-    }, 1000);
+    const { error } = await signUp(email, password, name, role);
+    
+    if (!error) {
+      // Success toast is handled in the auth context
+    }
+    
+    setIsLoading(false);
   };
 
   return (
